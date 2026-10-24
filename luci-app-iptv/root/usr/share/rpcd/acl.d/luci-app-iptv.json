@@ -1,0 +1,1 @@
+{"luci-app-iptv":{"description":"IPTV playlist file editor","read":{"file":{"/www/iptv":["read"]}},"write":{"file":{"/www/iptv":["write"]}}}}

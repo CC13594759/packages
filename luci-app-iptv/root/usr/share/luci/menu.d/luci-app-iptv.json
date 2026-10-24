@@ -1,0 +1,1 @@
+{"admin/services/iptv":{"action":{"path":"iptv","type":"view"},"depends":{"acl":["luci-app-iptv"]},"order":60,"title":"IPTV"}}
