@@ -1,0 +1,25 @@
+{
+  "luci-app-turn": {
+    "description": "TURN client service configuration",
+    "read": {
+      "ubus": {
+        "luci": [
+          "getInitList"
+        ]
+      },
+      "uci": [
+        "turn"
+      ]
+    },
+    "write": {
+      "ubus": {
+        "luci": [
+          "setInitAction"
+        ]
+      },
+      "uci": [
+        "turn"
+      ]
+    }
+  }
+}
