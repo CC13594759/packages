@@ -4,6 +4,7 @@ LUCI_TITLE:=LuCI Support for docker
 LUCI_DEPENDS:=@(aarch64||arm||x86_64) \
 	+luci-compat \
 	+luci-lib-jsonc \
+	+luci-lib-ip \
 	+docker \
 	+dockerd \
 	+ttyd
@@ -13,7 +14,7 @@ PKG_LICENSE:=AGPL-3.0
 PKG_MAINTAINER:=lisaac <lisaac.cn@gmail.com> \
 		Florian Eckert <fe@dev.tdt.de>
 
-PKG_VERSION:=1.0.0
+PKG_VERSION:=v0.5.26
 
 # luci-lib-docker merged into this package: its only file
 # luasrc/docker.lua is now luasrc/docker.lua in this package,
@@ -23,6 +24,4 @@ PKG_PROVIDES:=luci-lib-docker
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
-# Do NOT delete the next line: OpenWrt scan.mk finds packages by
-# grepping for 'call BuildPackage' in the Makefile.
 # call BuildPackage - OpenWrt buildroot signature

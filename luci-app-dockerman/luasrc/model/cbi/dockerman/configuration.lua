@@ -1,5 +1,10 @@
--- Copyright 2021 Florian Eckert <fe@dev.tdt.de>
--- Licensed to the public under the Apache License 2.0.
+--[[
+LuCI - Lua Configuration Interface
+Copyright 2021 Florian Eckert <fe@dev.tdt.de>
+Copyright 2021 lisaac <lisaac.cn@gmail.com>
+]]--
+
+local uci = (require "luci.model.uci").cursor()
 
 local m, s, o
 
@@ -7,42 +12,19 @@ m = Map("dockerd",
 	translate("Docker - Configuration"),
 	translate("DockerMan is a simple docker manager client for LuCI"))
 
-s = m:section(NamedSection, "globals", "section", translate("Global settings"))
+if nixio.fs.access("/usr/bin/dockerd") and not m.uci:get_bool("dockerd", "dockerman", "remote_endpoint")  then
+	s = m:section(NamedSection, "globals", "section", translate("Docker Daemon settings"))
 
-o = s:option(Flag, "remote_endpoint",
-	translate("Remote Endpoint"),
-	translate("Connect to remote endpoint"))
-o.rmempty = false
-
-o = s:option(Value, "remote_host",
-	translate("Remote Host"),
-	translate("Host or IP Address for the connection to a remote docker instance"))
-o.datatype = "host"
-o.rmempty = false
-o.optional = false
-o.placeholder = "10.1.1.2"
-o:depends("remote_endpoint", 1)
-
-o = s:option(Value, "remote_port",
-	translate("Remote Port"))
-o.placeholder = "2375"
-o.datatype = "port"
-o.rmempty = false
-o.optional = false
-o:depends("remote_endpoint", 1)
-
-if nixio.fs.access("/usr/bin/dockerd") then
-	o = s:option(Flag, "buildkit",
-		translate("Enable BuildKit"),
-		translate("BuildKit is an improved backend to replace the legacy builder."))
+	o = s:option(Flag, "auto_start", translate("Auto start"))
 	o.rmempty = false
-	o:depends("remote_endpoint", 0)
-
-	o = s:option(Flag, "experimental",
-		translate("Experimental Features"),
-		translate("Enable Docker experimental features."))
-	o.rmempty = false
-	o:depends("remote_endpoint", 0)
+	o.write = function(self, section, value)
+		if value == "1" then
+			luci.util.exec("/etc/init.d/dockerd enable")
+		else
+			luci.util.exec("/etc/init.d/dockerd disable")
+		end
+		m.uci:set("dockerd", "globals", "auto_start", value)
+	end
 
 	o = s:option(Value, "data_root",
 		translate("Docker Root Dir"))
@@ -56,29 +38,12 @@ if nixio.fs.access("/usr/bin/dockerd") then
 	o.datatype = "ipaddr"
 	o:depends("remote_endpoint", 0)
 
-	o = s:option(Value, "http_proxy",
-		translate("HTTP Proxy"),
-		translate("Set the HTTP proxy for Docker (optional)"))
-	o.placeholder = translate("Example: http://proxy.example.com:3128")
-	o:depends("remote_endpoint", 0)
-
-	o = s:option(Value, "https_proxy",
-		translate("HTTPS Proxy"),
-		translate("Set the HTTPS proxy for Docker (optional)"))
-	o.placeholder = translate("Example: https://proxy.example.com:3128")
-	o:depends("remote_endpoint", 0)
-
-	o = s:option(Value, "no_proxy",
-		translate("No Proxy (no_proxy)"),
-		translate("Set addresses that bypass the proxy for Docker (optional, comma separated)"))
-	o.placeholder = translate("Example: *.test.example.com,.example.org,127.0.0.0/8")
-	o:depends("remote_endpoint", 0)
-
 	o = s:option(DynamicList, "registry_mirrors",
 		translate("Registry Mirrors"),
 		translate("It replaces the daemon registry mirrors with a new set of registry mirrors"))
-	o.placeholder = translate("Example: https://hub-mirror.c.163.com")
+	o:value("https://hub-mirror.c.163.com", "https://hub-mirror.c.163.com")
 	o:depends("remote_endpoint", 0)
+	o.forcewrite = true
 
 	o = s:option(ListValue, "log_level",
 		translate("Log Level"),
@@ -91,12 +56,6 @@ if nixio.fs.access("/usr/bin/dockerd") then
 	o.rmempty = true
 	o:depends("remote_endpoint", 0)
 
-	o = s:option(DynamicList, "hosts",
-		translate("Client connection"),
-		translate('Specifies where the Docker daemon will listen for client connections (default: unix:///var/run/docker.sock)'))
-	o.placeholder = translate("Example: tcp://0.0.0.0:2375")
-	o.rmempty = true
-	o:depends("remote_endpoint", 0)
 end
 
 return m
