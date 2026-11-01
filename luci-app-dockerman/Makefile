@@ -14,7 +14,7 @@ PKG_LICENSE:=AGPL-3.0
 PKG_MAINTAINER:=lisaac <lisaac.cn@gmail.com> \
 		Florian Eckert <fe@dev.tdt.de>
 
-PKG_VERSION:=v0.5.26
+PKG_VERSION:=0.5.26
 
 # luci-lib-docker merged into this package: its only file
 # luasrc/docker.lua is now luasrc/docker.lua in this package,
