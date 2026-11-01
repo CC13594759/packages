@@ -7,7 +7,9 @@ LUCI_DEPENDS:=@(aarch64||arm||x86_64) \
 	+luci-lib-ip \
 	+docker \
 	+dockerd \
-	+ttyd
+	+ttyd \
+	+procps-ng \
+	+procps-ng-ps
 LUCI_PKGARCH:=all
 
 PKG_LICENSE:=AGPL-3.0
