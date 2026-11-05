@@ -1,6 +1,6 @@
 <html>
 <head>
-  <title>S.M.A.R.T 详情 /dev/<%=dev%></title>
+  <title><% if dev:match("^mmcblk%d+$") then %>eMMC 健康详情<% else %>S.M.A.R.T 详情<% end %> /dev/<%=dev%></title>
   <script type="text/javascript">//<![CDATA[
     let formData = new FormData()
     let xhr = new XMLHttpRequest()
@@ -17,7 +17,7 @@
           var tr = tb.insertRow(-1);
           tr.className = 'cbi-section-table-row cbi-rowstyle-' + ((i % 2) + 1);
           var td = null
-            <% if dev: match("nvme") then %>
+            <% if dev:match("nvme") or dev:match("^mmcblk%d+$") then %>
               tr.insertCell(-1).innerHTML = st[i].key;
           tr.insertCell(-1).innerHTML = st[i].value;
             <% else %>
@@ -50,10 +50,10 @@
 <body>
   <div id="maincontainer">
     <fieldset class="cbi-section">
-      <legend>S.M.A.R.T 属性：/dev/<%=dev%></legend>
+      <legend><% if dev:match("^mmcblk%d+$") then %>eMMC 健康信息<% else %>S.M.A.R.T 属性<% end %>：/dev/<%=dev%></legend>
       <table class="cbi-section-table" id="smart_attr_table">
         <tr class="cbi-section-table-titles">
-          <% if dev:match("nvme") then %>
+          <% if dev:match("nvme") or dev:match("^mmcblk%d+$") then %>
           <!-- <th class="cbi-section-table-cell"><%:KEY%></th>
             <th class="cbi-section-table-cell"><%:VALUE%></th> -->
           <% else %>

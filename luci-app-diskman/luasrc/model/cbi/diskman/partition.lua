@@ -60,7 +60,9 @@ local btn_health = s:option(Button, "health", translate("Health"))
 btn_health.render = function(self, section, scope)
   if disk_info.health then
     self.inputtitle = disk_info.health
-    if disk_info.health == "PASSED" then
+    -- eMMC: pre_eol 0x01 means normal, show green like PASSED.
+    -- (health itself is now the detected life-used value, not the raw code)
+    if disk_info.health == "PASSED" or disk_info.pre_eol == "0x01" or disk_info.health == "0x01" then
       self.inputstyle = "add"
     else
       self.inputstyle = "remove"

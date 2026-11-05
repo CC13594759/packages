@@ -35,15 +35,39 @@ end
 
 local get_smart_info = function(device)
   -- eMMC (mmcblk) has no SMART: read model/serial/health from sysfs instead of smartctl.
-  -- health is the raw pre_eol_info value, as requested (e.g. 0x01), not translated to PASSED.
+  -- Health is the actually detected wear value: DEVICE_LIFE_TIME_EST
+  -- (used life, 10% steps, worse of type A/B). pre_eol_info is only a
+  -- 3-state flag (0x01 normal / 0x02 warning / 0x03 urgent), not a
+  -- measurement, so it is kept separately as pre_eol. Fall back to the
+  -- raw pre_eol value if the kernel does not expose life_time.
   if device:match("^mmcblk%d+$") then
     local function trim(v)
       if not v then return nil end
       return (v:gsub("%s+$", ""))
     end
+    local pre_eol = trim(nixio.fs.readfile("/sys/block/" .. device .. "/device/pre_eol_info"))
+    local health = pre_eol
+    local life = trim(nixio.fs.readfile("/sys/block/" .. device .. "/device/life_time"))
+    if life then
+      local worst
+      for v in life:gmatch("0x%x+") do
+        local n = tonumber(v:gsub("^0x", ""), 16)
+        if n and (not worst or n > worst) then worst = n end
+      end
+      if worst then
+        if worst == 0 then
+          health = "未定义"
+        elseif worst >= 1 and worst <= 10 then
+          health = string.format("已用 %d%%-%d%%", (worst-1)*10, worst*10)
+        elseif worst == 11 then
+          health = "已超过预计寿命"
+        end
+      end
+    end
     return {
       sn = trim(nixio.fs.readfile("/sys/block/" .. device .. "/device/serial")),
-      health = trim(nixio.fs.readfile("/sys/block/" .. device .. "/device/pre_eol_info")),
+      health = health,
+      pre_eol = pre_eol,
     }
   end
   local section

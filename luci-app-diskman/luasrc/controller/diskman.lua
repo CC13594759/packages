@@ -147,6 +147,46 @@ local SMART_ATTR_ZH = {
 function smart_attr(dev)
   local attr = { }
   local dm = require "luci.model.diskman"
+  -- eMMC has no ATA S.M.A.R.T. attributes: smartctl returns nothing, so the
+  -- popup used to show only "无属性可显示". Report the eMMC EXT_CSD health
+  -- from sysfs instead (pre_eol_info + life time), in the same key/value
+  -- form as the NVMe branch.
+  if dev:match("^mmcblk%d+$") then
+    local function sysfs(name)
+      local v = nixio.fs.readfile("/sys/block/" .. dev .. "/device/" .. name)
+      return v and v:gsub("%s+$", "") or nil
+    end
+    local pre_eol = sysfs("pre_eol_info")
+    local pre_eol_zh = { ["0x00"] = "未定义", ["0x01"] = "正常", ["0x02"] = "警告", ["0x03"] = "紧急" }
+    if pre_eol then
+      attr[#attr+1] = {
+        key = "寿命预估 (pre_eol_info)",
+        value = pre_eol .. (pre_eol_zh[pre_eol] and (" (" .. pre_eol_zh[pre_eol] .. ")") or "")
+      }
+    end
+    local life = sysfs("life_time")
+    if life then
+      local a, b = life:match("^(%S+)%s+(%S+)$")
+      local function life_range(v)
+        if not v then return nil end
+        local n = tonumber(v:gsub("^0x", ""), 16)
+        if not n then return v end
+        if n == 0 then return v .. " (未定义)"
+        elseif n >= 1 and n <= 10 then return v .. string.format(" (已用 %d%%-%d%%)", (n-1)*10, n*10)
+        elseif n == 11 then return v .. " (已超过预计寿命)"
+        else return v end
+      end
+      attr[#attr+1] = { key = "寿命已用 A (life_time)", value = life_range(a) or "-" }
+      attr[#attr+1] = { key = "寿命已用 B (life_time)", value = life_range(b) or "-" }
+    end
+    local name = sysfs("name")
+    if name then attr[#attr+1] = { key = "型号", value = name } end
+    local serial = sysfs("serial")
+    if serial then attr[#attr+1] = { key = "序列号", value = serial } end
+    luci.http.prepare_content("application/json")
+    luci.http.write_json(attr)
+    return
+  end
   local cmd = io.popen(dm.command.smartctl ..  " -H -A -i /dev/%s" % dev)
   if cmd then
     local content = cmd:read("*all")
