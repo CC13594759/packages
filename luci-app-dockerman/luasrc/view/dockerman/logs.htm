@@ -38,13 +38,13 @@ end
 <% elseif string.find(log_content, "^%[DEBUG%]") then %>
     <!-- 调试信息：显示原始响应数据 -->
     <p style="color: #f90; padding: 10px;"><%:Debug Info - Raw Response:%></p>
-    <textarea readonly="readonly" wrap="off" rows="<%=row_count%>" id="syslog"><%=log_content:pcdata()%></textarea>
+    <textarea readonly="readonly" wrap="off" rows="<%=row_count%>" id="syslog" style="overflow-y: auto; max-height: 70vh;"><%=log_content:pcdata()%></textarea>
 <% elseif string.find(log_content, "^%[INFO%]") then %>
     <!-- 信息提示：显示友好提示 -->
     <p style="color: #888; padding: 10px;"><%:No events found in the last 24 hours.%></p>
 <% else %>
     <!-- 正常显示事件日志 -->
-    <textarea readonly="readonly" wrap="off" rows="<%=row_count%>" id="syslog"><%=log_content:pcdata()%></textarea>
+    <textarea readonly="readonly" wrap="off" rows="<%=row_count%>" id="syslog" style="overflow-y: auto; max-height: 70vh;"><%=log_content:pcdata()%></textarea>
 <% end %>
 </div>
 
